@@ -99,8 +99,13 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchUserInfo() {
     let userInfo: null | UserInfo = null;
-    userInfo = await getUserInfoApi();
-    userStore.setUserInfo(userInfo);
+    try {
+      userInfo = await getUserInfoApi();
+      console.log('User info:', userInfo);
+      userStore.setUserInfo(userInfo);
+    } catch (error) {
+      console.error('Error fetching user info:', error);
+    }
     return userInfo;
   }
 

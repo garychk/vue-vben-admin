@@ -1,10 +1,47 @@
 import type { UserInfo } from '@vben/types';
 
-import { requestClient } from '#/api/request';
+import { baseRequestClient } from '#/api/request';
+
+/**
+ * ABP 框架的标准响应格式
+ */
+interface AbpResponse<T> {
+  result: T;
+  success: boolean;
+  targetUrl: string | null;
+  error: any | null;
+  unAuthorizedRequest: boolean;
+}
+
+/**
+ * ABP 框架的登录信息响应
+ */
+interface AbpLoginInfo {
+  application: any;
+  user: UserInfo;
+  tenant: any | null;
+}
 
 /**
  * 获取用户信息
  */
 export async function getUserInfoApi() {
-  return requestClient.get<UserInfo>('/user/info');
+  try {
+    const response = await baseRequestClient.get<any>('/api/services/app/Session/GetCurrentLoginInformations');
+    
+    // 检查响应是否成功
+    if (response.status === 200 && response.data && response.data.result) {
+      // 从 ABP 响应格式中提取用户信息
+      const result = response.data.result;
+      // 伪造一个roles
+      result.user = result.user || {};
+      result.user.roles = ['admin'];
+      return result.user;
+    }
+    
+    throw new Error('Failed to get user info: ' + (response.error?.message || 'Unknown error'));
+  } catch (error) {
+    console.error('Error in getUserInfoApi:', error);
+    throw error;
+  }
 }

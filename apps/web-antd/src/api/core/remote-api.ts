@@ -3,7 +3,8 @@ import { useAppConfig } from '@vben/hooks';
 
 // 从环境变量中获取远程接口基础地址
 const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
-const REMOTE_API_BASE_URL = apiURL;
+// 在开发环境中使用代理路径，避免跨域问题
+const REMOTE_API_BASE_URL = import.meta.env.DEV ? '/api' : (import.meta.env.VITE_REMOTE_API_URL || apiURL);
 
 /**
  * 创建远程请求客户端
@@ -44,9 +45,7 @@ export namespace RemoteApi {
 
   /** 登录接口返回值 */
   export interface LoginResult {
-    result: {
-      accessToken: string;
-    };
+    data: any;
     // accessToken: string;
   }
 
@@ -67,7 +66,7 @@ export async function login(data: RemoteApi.LoginParams) {
  * 远程刷新accessToken
  */
 export async function remoteRefreshTokenApi() {
-  return baseRemoteRequestClient.post<RemoteApi.RefreshTokenResult>('/auth/refresh', {
+  return baseRemoteRequestClient.post<RemoteApi.RefreshTokenResult>('/api/auth/refresh', {
     withCredentials: true,
   });
 }
@@ -76,7 +75,7 @@ export async function remoteRefreshTokenApi() {
  * 远程退出登录
  */
 export async function remoteLogoutApi() {
-  return baseRemoteRequestClient.post('/auth/logout', {
+  return baseRemoteRequestClient.post('/api/services/app/Account/Logout', {
     withCredentials: true,
   });
 }
@@ -85,5 +84,6 @@ export async function remoteLogoutApi() {
  * 远程获取用户权限码
  */
 export async function remoteGetAccessCodesApi() {
-  return remoteRequestClient.get<string[]>('/auth/codes');
+  // return remoteRequestClient.get<string[]>('/api/auth/codes');
+  return remoteRequestClient.get<string[]>('/api/services/app/Session/GetCurrentLoginInformations');
 }

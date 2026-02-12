@@ -2,7 +2,7 @@
 import type { VbenFormSchema } from '@vben/common-ui';
 import type { BasicOption } from '@vben/types';
 
-import { computed, markRaw } from 'vue';
+import { computed, markRaw, ref } from 'vue';
 
 import { AuthenticationLogin, SliderCaptcha, z } from '@vben/common-ui';
 import { $t } from '@vben/locales';
@@ -12,6 +12,8 @@ import { useAuthStore } from '#/store';
 defineOptions({ name: 'Login' });
 
 const authStore = useAuthStore();
+const rememberClient = ref(true);
+const tenantId = ref<number>(1);
 
 const MOCK_USER_OPTIONS: BasicOption[] = [
   {
@@ -87,12 +89,47 @@ const formSchema = computed((): VbenFormSchema[] => {
     },
   ];
 });
+
+async function handleSubmit(values: any) {
+  // 添加远程登录接口需要的参数
+  const loginParams = {
+    ...values,
+    rememberClient: rememberClient.value,
+    tenantId: tenantId.value,
+  };
+  
+  await authStore.authLogin(loginParams);
+}
 </script>
 
 <template>
   <AuthenticationLogin
     :form-schema="formSchema"
     :loading="authStore.loginLoading"
-    @submit="authStore.authLogin"
-  />
+    @submit="handleSubmit"
+  >
+    <template #extra>
+      <div class="mt-4 space-y-2">
+        <div class="flex items-center">
+          <input
+            type="checkbox"
+            id="rememberClient"
+            v-model="rememberClient"
+            class="mr-2"
+          />
+          <label for="rememberClient">Remember me</label>
+        </div>
+        <div class="flex items-center">
+          <label for="tenantId" class="mr-2">Tenant ID:</label>
+          <input
+            type="number"
+            id="tenantId"
+            v-model="tenantId"
+            class="w-24 px-2 py-1 border rounded"
+            min="1"
+          />
+        </div>
+      </div>
+    </template>
+  </AuthenticationLogin>
 </template>
