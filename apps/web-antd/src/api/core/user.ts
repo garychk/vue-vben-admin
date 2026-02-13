@@ -36,6 +36,14 @@ export async function getUserInfoApi() {
       // 伪造一个roles
       result.user = result.user || {};
       result.user.roles = ['admin'];
+      // 如果响应中包含租户信息，将租户 ID 添加到用户信息中
+      if (result.tenant && result.tenant.id) {
+        result.user.tenantId = result.tenant.id;
+      }
+      else {
+        // 如果没有租户信息，默认设置为租户 ID 1
+        result.user.tenantId = 1;
+      }
       return result.user;
     }
     

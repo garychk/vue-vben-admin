@@ -11,7 +11,7 @@ import {
   errorMessageResponseInterceptor,
   RequestClient,
 } from '@vben/request';
-import { useAccessStore } from '@vben/stores';
+import { useAccessStore, useUserStore } from '@vben/stores';
 
 import { message } from 'ant-design-vue';
 
@@ -64,9 +64,21 @@ function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   client.addRequestInterceptor({
     fulfilled: async (config) => {
       const accessStore = useAccessStore();
+      const userStore = useUserStore();
 
+      // 添加认证头部
       config.headers.Authorization = formatToken(accessStore.accessToken);
+      
+      // 添加租户 ID 头部
+      const tenantId = userStore.userInfo?.tenantId || 1;
+      if (tenantId) {
+        config.headers['Abp.TenantId'] = tenantId;
+        config.headers['Abp-TenantId'] = tenantId;
+      }
+      
+      // 添加语言头部
       config.headers['Accept-Language'] = preferences.app.locale;
+      
       return config;
     },
   });
